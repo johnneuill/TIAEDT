@@ -9,7 +9,6 @@
 #   - AES-256-CBC encryption
 #   - AES-256-CBC decryption
 #   - PKCS#7 padding
-#   - User-provided Key and IV
 #   - Base64 output for easy transport/storage
 #   - Command-line interface
 #
@@ -130,12 +129,12 @@ def get_key_and_iv():
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage:")
+        print('Usage:')
         print()
-        print("  Encrypt:")
+        print('  Encrypt:')
         print('    python TIAEDT.py encrypt "Hello World"')
         print()
-        print("  Decrypt:")
+        print('  Decrypt:')
         print('    python TIAEDT.py decrypt "<BASE64_CIPHERTEXT>"')
         sys.exit(1)
 
