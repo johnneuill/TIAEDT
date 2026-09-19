@@ -9,7 +9,7 @@
 #   - AES-256-CBC encryption
 #   - AES-256-CBC decryption
 #   - PKCS#7 padding
-#   - Predefined constant Key and IV
+#   - User-provided Key and IV
 #   - Base64 output for easy transport/storage
 #   - Command-line interface
 #
@@ -18,10 +18,10 @@
 #
 # Usage:
 #   Encrypt:
-#       python aes_tool.py encrypt "Hello World"
+#       python TIAEDT.py encrypt "Hello World"
 #
 #   Decrypt:
-#       python aes_tool.py decrypt "<BASE64_CIPHERTEXT>"
+#       python TIAEDT.py decrypt "<BASE64_CIPHERTEXT>"
 #
 # Notes:
 #   - AES-256 requires a 32-byte key.
@@ -37,21 +37,10 @@ from Crypto.Util.Padding import pad, unpad
 
 
 # -----------------------------------------------------------------------------
-# CONSTANT KEY AND IV
-# -----------------------------------------------------------------------------
-
-# 32 bytes = AES-256
-KEY = b"86b50a3d066819458bf2a8cbfefefb22"
-
-# 16 bytes = AES block size
-IV = b"c57e764b2deb8593"
-
-
-# -----------------------------------------------------------------------------
 # AES ENCRYPTION
 # -----------------------------------------------------------------------------
 
-def encrypt(plaintext: str) -> str:
+def encrypt(plaintext: str, key: bytes, iv: bytes) -> str:
     """
     Encrypt plaintext using AES-256-CBC.
 
@@ -65,9 +54,9 @@ def encrypt(plaintext: str) -> str:
     padded_data = pad(plaintext_bytes, AES.block_size)
 
     cipher = AES.new(
-        KEY,
+        key,
         AES.MODE_CBC,
-        IV
+        iv
     )
 
     ciphertext = cipher.encrypt(padded_data)
@@ -79,7 +68,7 @@ def encrypt(plaintext: str) -> str:
 # AES DECRYPTION
 # -----------------------------------------------------------------------------
 
-def decrypt(ciphertext_b64: str) -> str:
+def decrypt(ciphertext_b64: str, key: bytes, iv: bytes) -> str:
     """
     Decrypt Base64-encoded AES ciphertext.
 
@@ -91,9 +80,9 @@ def decrypt(ciphertext_b64: str) -> str:
         ciphertext = base64.b64decode(ciphertext_b64)
 
         cipher = AES.new(
-            KEY,
+            key,
             AES.MODE_CBC,
-            IV
+            iv
         )
 
         padded_data = cipher.decrypt(ciphertext)
@@ -110,6 +99,29 @@ def decrypt(ciphertext_b64: str) -> str:
         raise ValueError(
             "Invalid ciphertext or incorrect encryption parameters."
         ) from exc
+
+
+# -----------------------------------------------------------------------------
+# INPUT VALIDATION
+# -----------------------------------------------------------------------------
+
+def get_key_and_iv():
+    """
+    Ask the user for the AES key and IV.
+    """
+
+    key = input("Enter AES-256 Key (32 bytes): ").encode("utf-8")
+    iv = input("Enter IV (16 bytes): ").encode("utf-8")
+
+    if len(key) != 32:
+        print("Error: AES-256 key must be exactly 32 bytes.")
+        sys.exit(1)
+
+    if len(iv) != 16:
+        print("Error: IV must be exactly 16 bytes.")
+        sys.exit(1)
+
+    return key, iv
 
 
 # -----------------------------------------------------------------------------
@@ -130,13 +142,16 @@ def main():
     operation = sys.argv[1].lower()
     value = sys.argv[2]
 
+    # Get Key and IV from user
+    key, iv = get_key_and_iv()
+
     if operation == "encrypt":
-        result = encrypt(value)
+        result = encrypt(value, key, iv)
         print(result)
 
     elif operation == "decrypt":
         try:
-            result = decrypt(value)
+            result = decrypt(value, key, iv)
             print(result)
 
         except ValueError as exc:
